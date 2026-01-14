@@ -1,10 +1,9 @@
-package com.impact.kafkagenerator;
+package com.impact.kafkagenerator.integration;
 
 import com.impact.kafkagenerator.config.TestContainersConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.kafka.KafkaContainer;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -14,9 +13,6 @@ class KafkaIntegrationTest {
 
     @Autowired
     KafkaContainer kafkaContainer;
-
-    @Autowired
-    KafkaTemplate<String, String> kafkaTemplate;
 
     @Test
     void shouldStartKafka() {

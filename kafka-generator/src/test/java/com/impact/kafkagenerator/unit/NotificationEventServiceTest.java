@@ -1,4 +1,4 @@
-package com.impact.kafkagenerator;
+package com.impact.kafkagenerator.unit;
 
 import com.impact.kafkagenerator.payload.NotificationEvent;
 import com.impact.kafkagenerator.service.impl.NotificationEventServiceImpl;
@@ -8,10 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.testcontainers.kafka.KafkaContainer;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;

@@ -11,14 +11,12 @@ public class TestContainersConfig {
 
     @Bean
     @ServiceConnection
-    KafkaContainer kafkaContainer() {
-        DockerImageName kafkaImage = DockerImageName
-                .parse("confluentinc/cp-kafka:7.3.2")
-                .asCompatibleSubstituteFor("apache/kafka");
-        KafkaContainer kafkaContainer = new KafkaContainer(kafkaImage)
+    public KafkaContainer kafkaContainer() {
+        KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.0"))
                 .withReuse(true);
-        kafkaContainer.start();
-        return kafkaContainer;
+        kafka.start();
+        System.setProperty("kafka.bootstrap-servers", kafka.getBootstrapServers());
+        return kafka;
     }
 
 }
