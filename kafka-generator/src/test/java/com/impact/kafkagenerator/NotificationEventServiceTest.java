@@ -22,39 +22,34 @@ class NotificationEventServiceTest {
 
     @InjectMocks
     private NotificationEventServiceImpl notificationEventService;
+    private NotificationEvent notificationEvent;
 
     private static final String TOPIC = "notification-events";
 
     @BeforeEach
     void setupBefore() {
         ReflectionTestUtils.setField(notificationEventService, "topic", TOPIC);
-    }
-
-    @Test
-    void shouldSendNotificationEventSuccess() {
-        NotificationEvent event = NotificationEvent.builder()
+        notificationEvent = NotificationEvent.builder()
                 .userId("123")
                 .messageType("EMAIL")
                 .content("Account verification.")
                 .build();
+    }
 
-        notificationEventService.sendNotificationEvent(event);
-        verify(kafkaTemplate, times(1)).send(TOPIC, "123", event);
+    @Test
+    void shouldSendNotificationEventSuccess() {
+        notificationEventService.sendNotificationEvent(notificationEvent);
+        verify(kafkaTemplate, times(1)).send(TOPIC, "123", notificationEvent);
         verifyNoMoreInteractions(kafkaTemplate);
     }
 
     @Test
     void shouldNotThrowExceptionWhenKafkaFails() {
-        NotificationEvent event = NotificationEvent.builder()
-                .userId("123")
-                .messageType("EMAIL")
-                .content("Account verification.")
-                .build();
         doThrow(new RuntimeException("Kafka is down."))
                 .when(kafkaTemplate)
                 .send(anyString(), anyString(), any());
 
-        assertDoesNotThrow(() -> notificationEventService.sendNotificationEvent(event));
+        assertDoesNotThrow(() -> notificationEventService.sendNotificationEvent(notificationEvent));
         verify(kafkaTemplate).send(any(), any(), any());
     }
 }
