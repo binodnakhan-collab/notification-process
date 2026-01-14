@@ -8,8 +8,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.testcontainers.kafka.KafkaContainer;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
@@ -19,6 +21,7 @@ class NotificationEventServiceTest {
 
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
+
 
     @InjectMocks
     private NotificationEventServiceImpl notificationEventService;
@@ -51,5 +54,10 @@ class NotificationEventServiceTest {
 
         assertDoesNotThrow(() -> notificationEventService.sendNotificationEvent(notificationEvent));
         verify(kafkaTemplate).send(any(), any(), any());
+    }
+
+    @Test
+    void shouldRunKafka() {
+
     }
 }
