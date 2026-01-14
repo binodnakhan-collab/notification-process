@@ -1,5 +1,27 @@
 spring:
   application:
     name: Notification-Generator
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        linger.ms: 10
+        batch.size: 16384
+        compression.type: snappy
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true
+
 server:
   port: 8001
+
+notification:
+  kafka:
+    topic: notification-events
+  generator:
+    initial-delay: 5000
+    fixed-delay: 3000
