@@ -3,8 +3,11 @@ package com.impact.notificationconsumer.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.impact.notificationconsumer.entity.UserEntity;
 import com.impact.notificationconsumer.exception.CustomException;
+import com.impact.notificationconsumer.external.UserExternalCommunication;
+import com.impact.notificationconsumer.payload.request.NotificationEvent;
 import com.impact.notificationconsumer.payload.request.PaginationRequest;
 import com.impact.notificationconsumer.payload.response.DataPaginationResponse;
+import com.impact.notificationconsumer.payload.response.ExternalUserResponse;
 import com.impact.notificationconsumer.payload.response.GlobalResponse;
 import com.impact.notificationconsumer.payload.response.UserResponse;
 import com.impact.notificationconsumer.repository.UserRepository;
@@ -16,7 +19,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,6 +31,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final UserExternalCommunication userExternalCommunication;
 
     @Override
     public GlobalResponse getAllUsers(PaginationRequest paginationRequest) {
@@ -45,6 +51,34 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new CustomException("User not found with id: %s", HttpStatus.NOT_FOUND, userId));
         UserResponse userResponse = userResponseBuilder(user);
         return new GlobalResponse("User detail fetch success.", userResponse);
+    }
+
+    @Override
+    @Transactional
+    public void processNotificationEvent(String message) {
+        NotificationEvent notificationEvent;
+        try {
+            notificationEvent = objectMapper.readValue(message, NotificationEvent.class);
+        }catch (Exception ex) {
+            log.error("Invalid JSON message: {}", message);
+            return;
+        }
+        ExternalUserResponse userResponse = userExternalCommunication.getUserDetail(Long.valueOf(notificationEvent.getUserId()));
+        if (userResponse == null) {
+            log.warn("User not found with user id={}", notificationEvent.getUserId());
+            return;
+        }
+
+        UserEntity user = UserEntity.builder()
+                .id(Long.valueOf(notificationEvent.getUserId()))
+                .fullName(userResponse.getFirstName() + userResponse.getLastName())
+                .country(userResponse.getCountry())
+                .email(userResponse.getEmail())
+                .address(userResponse.getAddress())
+                .doe(LocalDateTime.now())
+                .notificationEventContext(message)
+                .build();
+        userRepository.save(user);
     }
 
     /*
