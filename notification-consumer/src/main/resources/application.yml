@@ -3,8 +3,8 @@ spring:
     name: Notification-Consumer
   datasource:
     url: jdbc:mysql://localhost:3306/impact?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: user
-    password: P@ssw0rd@9860
+    username: root
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
