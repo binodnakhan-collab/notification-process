@@ -34,7 +34,7 @@ server:
   port: 8000
 
 external:
-  host: http://localhost:7200/api/user
+  host: ${EXTERNAL_USER_SERVICE_URL:http://localhost:7200/api/user}
 notification:
   kafka:
     topic: notification-events
