@@ -70,7 +70,6 @@ public class UserServiceImpl implements UserService {
         }
 
         UserEntity user = UserEntity.builder()
-                .id(Long.valueOf(notificationEvent.getUserId()))
                 .fullName(userResponse.getFirstName() + userResponse.getLastName())
                 .country(userResponse.getCountry())
                 .email(userResponse.getEmail())

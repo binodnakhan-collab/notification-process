@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
@@ -42,10 +43,15 @@ public class UserExternalCommunication {
                                 .filter(ExternalExceptionHandler::isRetryable)
                 )
                 .onErrorResume(ex -> {
-                    log.error("External api call failed for id={}", id, ex);
+                    if (ex instanceof WebClientRequestException wc) {
+                        log.error("Service unavailable at this moment please try again later.");
+                    } else {
+                        log.error("External api call failed for id={} with exception {}", id, ex.getMessage());
+                    }
                     return Mono.empty();
                 })
                 .block();
     }
+
 
 }
