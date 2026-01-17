@@ -71,7 +71,7 @@ public class UserControllerTest {
         mockUserData.put("address", "Bhaktapur");
         mockUserData.put("country", "Nepal");
         mockUserData.put("notificationEventContext",
-                "{\"userId\": 123, \"message\": \"Welcome to our service!\", \"eventType\": \"USER_REGISTERED\"}");
+                "{\"userId\": 123, \"content\": \"Welcome to our service!\", \"messageType\": \"SMS\"}");
         mockUserData.put("doe", "2026-01-01T05:45:00.02");
         return mockUserData;
     }

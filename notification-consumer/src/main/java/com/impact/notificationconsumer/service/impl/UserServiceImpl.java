@@ -68,9 +68,13 @@ public class UserServiceImpl implements UserService {
             log.warn("User not found with user id={}", notificationEvent.getUserId());
             return;
         }
+        if (userRepository.existsById(userResponse.getUserId())) {
+            log.info("Duplicate user id {} found in message so skip duplicate entry in database.", userResponse.getUserId());
+            return;
+        }
 
         UserEntity user = UserEntity.builder()
-                .fullName(userResponse.getFirstName() + userResponse.getLastName())
+                .fullName(userResponse.getFirstName() + " " + userResponse.getLastName())
                 .country(userResponse.getCountry())
                 .email(userResponse.getEmail())
                 .address(userResponse.getAddress())
