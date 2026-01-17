@@ -39,9 +39,15 @@ public class UserExternalCommunication {
                 .bodyToMono(ExternalUserResponse.class)
                 .timeout(Duration.ofSeconds(3))
                 .retryWhen(
-                        Retry.backoff(2, Duration.ofMillis(300))
+                        Retry.backoff(3, Duration.ofMillis(300))
                                 .filter(ExternalExceptionHandler::isRetryable)
+                                .doBeforeRetry(retrySignal -> {
+                                    long attempt = retrySignal.totalRetries() + 1;
+                                    Throwable failure = retrySignal.failure();
+                                    log.warn("Retry attempt {} due to error: {}", attempt, failure.getMessage(), failure);
+                                })
                 )
+
                 .onErrorResume(ex -> {
                     if (ex instanceof WebClientRequestException wc) {
                         log.error("Service unavailable at this moment please try again later.");
