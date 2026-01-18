@@ -10,4 +10,29 @@ This is a microservice that consumes notifications from a Kafka topic and perfor
 4. Handle all consumer issue, external service user query were skip and proper loggin.
 
 ## Getting Started
-1. Prerequisites: Ensure that you have Docker and Docker Compose installed on your machine. with mysql 8 and kafka.
+## Architecture Overview
+
+The Notification Consumer service is built using Spring Boot and leverages Spring Cloud Stream Kafka for consuming notifications from a Kafka topic. It integrates with the User Service to retrieve user information. The service uses HikariCP for connection pooling and MySQL 8 as the database. 
+
+## Testing Strategy
+
+- Unit Tests:
+    - For each class, write unit tests to test the class methods.
+    - Mock external dependencies using Mockito.
+    - Test the critical business logic.
+- Integration Tests:
+    - Test the interaction between the application and the external dependencies.
+    - Use Testcontainers to simulate the Kafka broker and the external services.
+    - Test the integration between the application and the external services.
+## Failure-Handling Approach
+
+The service uses weblclient retry mechanism when timeout case.
+
+## Trade-Offs
+
+The service makes a trade-off in terms of performance and latency. By integrating with the User Service, there is added latency in the processing of notifications. However, the service ensures data integrity by performing operations on the user information.
+
+### Continuous Integration and Deployment
+
+The service is continuously integrated and deployed using GitHub Actions. The service is built and tested using Docker containersß.
+1. Prerequisites: Ensure that you have Docker and Docker Compose installed on your machine. with mysql 8 and kafka.ß
