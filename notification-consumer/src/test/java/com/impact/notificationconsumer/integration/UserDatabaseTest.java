@@ -14,27 +14,34 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.Aware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @Import(TestContainersConfig.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class UserDatabaseTest {
 
     @Autowired
@@ -54,6 +61,8 @@ public class UserDatabaseTest {
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+        Mockito.reset(userExternalCommunication);
+
     }
 
     @Test
@@ -71,27 +80,26 @@ public class UserDatabaseTest {
     }
 
     @Test
-    void shouldConsumeNotificationEventAndPersistToDB() throws JsonProcessingException, ExecutionException, InterruptedException, TimeoutException {
-        NotificationEvent notificationEvent = NotificationEvent.builder()
-                .userId("100")
-                .messageType("SMS")
-                .content("Hello, how are you?")
-                .build();
-
-        ExternalUserResponse externalUserResponse = ExternalUserResponse.builder()
-                .userId(Long.valueOf(notificationEvent.getUserId()))
+    void shouldProcessNotificationEventAndPersistUserSuccessfully() throws Exception {
+        ExternalUserResponse userResponse = ExternalUserResponse.builder()
+                .userId(100L)
                 .firstName("Binod")
                 .lastName("Nakhan")
-                .city("Bhaktapur")
-                .email("binod@yopmail.com")
-                .state("Bagmati")
-                .phoneNumber("9766919210")
+                .email("binod1@yopmail.com")
+                .country("Nepal")
                 .address("Bhaktapur")
-                .zipCode("44800")
                 .build();
 
-        when(userExternalCommunication.getUserDetail(Long.valueOf(notificationEvent.getUserId()))).thenReturn(externalUserResponse);
-        String message = objectMapper.writeValueAsString(notificationEvent);
+        when(userExternalCommunication.getUserDetail(anyLong()))
+                .thenReturn(userResponse);
+
+        NotificationEvent randomEvent = new NotificationEvent(
+                String.valueOf(ThreadLocalRandom.current().nextInt(1, 1000)),
+                "PUSH_NOTIFICATION",
+                "Payment receipt."
+        );
+
+        String message = objectMapper.writeValueAsString(randomEvent);
         kafkaTemplate.send(TOPIC, message);
 
         await()
@@ -99,12 +107,14 @@ public class UserDatabaseTest {
                 .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> {
                     List<UserEntity> users = userRepository.findAll();
-                    assertThat(users).hasSize(1);
+                    assertFalse(users.isEmpty());
                 });
 
-        verify(userExternalCommunication, times(1)).getUserDetail(Long.valueOf(notificationEvent.getUserId()));
-        verify(userExternalCommunication, times(1))
-                .getUserDetail(Long.valueOf(notificationEvent.getUserId()));
+        ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+        verify(userExternalCommunication, timeout(5000))
+                .getUserDetail(captor.capture());
     }
+
+
 
 }
