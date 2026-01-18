@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -85,7 +86,7 @@ public class UserDatabaseTest {
                 .userId(100L)
                 .firstName("Binod")
                 .lastName("Nakhan")
-                .email("binod1@yopmail.com")
+                .email("binod11@yopmail.com")
                 .country("Nepal")
                 .address("Bhaktapur")
                 .build();
@@ -95,8 +96,8 @@ public class UserDatabaseTest {
 
         NotificationEvent randomEvent = new NotificationEvent(
                 String.valueOf(ThreadLocalRandom.current().nextInt(1, 1000)),
-                "PUSH_NOTIFICATION",
-                "Payment receipt."
+                "SMS",
+                "Payment receipt1."
         );
 
         String message = objectMapper.writeValueAsString(randomEvent);

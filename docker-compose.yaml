@@ -55,8 +55,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      EXTERNAL_USER_SERVICE_HOST: http://192.168.1.76:7200
-      EXTERNAL_USER_SERVICE_URL: http://192.168.1.76:7200/api/user
+
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9091"]
       interval: 10s
@@ -105,6 +104,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
       SPRING_KAFKA_CONSUMER_GROUP_ID: notification-consumer-group
       SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+      EXTERNAL_USER_SERVICE_HOST: http://host.docker.internal:7200
+      EXTERNAL_USER_SERVICE_URL: http://host.docker.internal:7200/api/user
     depends_on:
       mysql:
         condition: service_healthy
