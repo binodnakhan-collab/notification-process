@@ -60,7 +60,7 @@ class NotificationEventTest {
     }
 
     @Test
-    public void shouldSendNotificationEvent() {
+    void shouldSendNotificationEvent() {
         NotificationEvent notificationEvent = NotificationEvent.builder()
                 .messageType("SMS")
                 .userId("123")
