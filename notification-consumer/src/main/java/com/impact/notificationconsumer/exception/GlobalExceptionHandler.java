@@ -21,12 +21,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(new GlobalResponse(ex));
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<GlobalResponse> handleException(Exception ex) {
-        GlobalResponse globalResponse = new GlobalResponse(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
-    }
-
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<GlobalResponse> handleException(NoResourceFoundException ex) {
         GlobalResponse globalResponse = new GlobalResponse(ex.getMessage());
