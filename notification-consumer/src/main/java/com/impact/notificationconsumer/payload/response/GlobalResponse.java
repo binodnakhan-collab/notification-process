@@ -24,4 +24,9 @@ public class GlobalResponse {
         this.success = false;
         this.message = ex.getMessage();
     }
+
+    public GlobalResponse(String message) {
+        this.success = false;
+        this.message = message;
+    }
 }
