@@ -1,6 +1,7 @@
 package com.impact.notificationconsumer.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.impact.notificationconsumer.config.UserCache;
 import com.impact.notificationconsumer.entity.UserEntity;
 import com.impact.notificationconsumer.exception.CustomException;
 import com.impact.notificationconsumer.external.UserExternalCommunication;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -32,12 +34,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final UserExternalCommunication userExternalCommunication;
+    private final UserCache userCache;
+
+    private final String CACHE_KEY = "users";
 
     @Override
     public GlobalResponse getAllUsers(PaginationRequest paginationRequest) {
         Pageable pageable = PaginationHelper.getPageable(paginationRequest);
         Page<UserEntity> userPage = userRepository.findAll(pageable);
         List<UserResponse> userListResponse = userPage.getContent().stream().map(this::userResponseBuilder).toList();
+        userCache.put(CACHE_KEY, userListResponse);
         DataPaginationResponse<UserResponse> finalResponse = new DataPaginationResponse<>(userPage.getNumberOfElements(), userListResponse);
         /*
          * Here we create generic response which contain status (success true or false), message and data as object.
@@ -59,7 +65,7 @@ public class UserServiceImpl implements UserService {
         NotificationEvent notificationEvent;
         try {
             notificationEvent = objectMapper.readValue(message, NotificationEvent.class);
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             log.error("Invalid JSON message: {}", message);
             return;
         }
@@ -76,12 +82,28 @@ public class UserServiceImpl implements UserService {
         UserEntity user = UserEntity.builder()
                 .fullName(userResponse.getFirstName() + " " + userResponse.getLastName())
                 .country(userResponse.getCountry())
+
                 .email(userResponse.getEmail())
                 .address(userResponse.getAddress())
                 .doe(LocalDateTime.now())
                 .notificationEventContext(message)
                 .build();
         userRepository.save(user);
+    }
+
+    @Override
+    public GlobalResponse searchUser(String query) {
+        List<UserResponse> userResponses = userCache.get(query);
+        List<UserResponse> finalResponse;
+        if (!userResponses.isEmpty()) {
+            finalResponse = userResponses.stream().filter(u -> u.getCountry().equals(query)).toList();
+        } else {
+            List<UserEntity> users = userRepository.getUserByCountry(query);
+            finalResponse = users.stream().map(this::userResponseBuilder).toList();
+            userCache.put(query, finalResponse);
+
+        }
+        return new GlobalResponse("Data fetch success", finalResponse);
     }
 
     /*

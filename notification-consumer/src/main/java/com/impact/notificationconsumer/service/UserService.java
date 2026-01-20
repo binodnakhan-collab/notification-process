@@ -9,4 +9,5 @@ public interface UserService {
     GlobalResponse getAllUsers(PaginationRequest paginationRequest);
     GlobalResponse getUserById(Long userId);
     void processNotificationEvent(String message);
+    GlobalResponse searchUser(String query);
 }

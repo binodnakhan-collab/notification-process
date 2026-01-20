@@ -29,8 +29,14 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GlobalResponse> getUserById(@PathVariable (name = "id") Long userId) {
+    public ResponseEntity<GlobalResponse> getUserById(@PathVariable(name = "id") Long userId) {
         GlobalResponse userResponse = userService.getUserById(userId);
+        return ResponseEntity.ok().body(userResponse);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<GlobalResponse> searchUser(@RequestParam String query) {
+        GlobalResponse userResponse = userService.searchUser(query);
         return ResponseEntity.ok().body(userResponse);
     }
 }

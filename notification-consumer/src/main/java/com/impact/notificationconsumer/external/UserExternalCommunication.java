@@ -9,10 +9,12 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
 @Component
 @RequiredArgsConstructor
@@ -28,23 +30,16 @@ public class UserExternalCommunication {
         return webClient.get()
                 .uri(externalHost + "/metadata/{id}", id)
                 .retrieve()
-                .onStatus(status ->
-                    status == HttpStatus.NOT_FOUND,
-                    response -> {
-                        log.warn("Something went wrong while calling external api.");
-                        return Mono.empty();
-                    }
-                )
-                .onStatus(HttpStatusCode::isError, ExternalExceptionHandler::logAndSuppress)
                 .bodyToMono(ExternalUserResponse.class)
                 .timeout(Duration.ofSeconds(3))
                 .retryWhen(
                         Retry.backoff(3, Duration.ofMillis(300))
-                                .filter(ExternalExceptionHandler::isRetryable)
+                                .filter(this::isRetryable)
                                 .doBeforeRetry(retrySignal -> {
                                     long attempt = retrySignal.totalRetries() + 1;
                                     Throwable failure = retrySignal.failure();
                                     log.warn("Retry attempt {} due to error: {}", attempt, failure.getMessage(), failure);
+                                    return;
                                 })
                 )
 
@@ -57,6 +52,15 @@ public class UserExternalCommunication {
                     return Mono.empty();
                 })
                 .block();
+    }
+
+    private boolean isRetryable(Throwable ex) {
+        if (ex instanceof TimeoutException) return true;
+        if (ex instanceof WebClientRequestException) return true;
+        if (ex instanceof WebClientResponseException webEx) {
+            return webEx.getStatusCode().is5xxServerError();
+        }
+        return false;
     }
 
 
